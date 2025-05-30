@@ -1,0 +1,13 @@
+class FusionHead(nn.Module):
+    def __init__(self, input_dim=512, hidden_dim=256, output_dim=5):
+        super(FusionHead, self).__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(hidden_dim, output_dim)
+        )
+
+    def forward(self, global_feats, local_feats):
+        x = torch.cat([global_feats, local_feats], dim=1)  # [batch, 512]
+        return self.mlp(x)  # [batch, 5] — subgrades and overall
