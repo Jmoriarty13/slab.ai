@@ -1,0 +1,33 @@
+class LocalViT(nn.Module):
+    def __init__(self, model_name="google/vit-small-patch8-128", num_patches=26, shared_weights=True):
+        super(LocalViT, self).__init__()
+        self.shared_weights = shared_weights
+        self.num_patches = num_patches
+
+        if shared_weights:
+            self.vit = ViTModel.from_pretrained(model_name)
+        else:
+            self.vits = nn.ModuleList([
+                ViTModel.from_pretrained(model_name) for _ in range(num_patches)
+            ])
+
+        self.fc = nn.Linear(self.vit.config.hidden_size, 256)
+
+    def forward(self, x):  # shape: [batch, num_patches, 3, H, W]
+        B, N, C, H, W = x.shape
+        x = x.view(-1, C, H, W)  # [B*N, 3, H, W]
+
+        if self.shared_weights:
+            outputs = self.vit(pixel_values=x)
+            cls_tokens = outputs.last_hidden_state[:, 0, :]
+        else:
+            cls_tokens = []
+            for i in range(self.num_patches):
+                patch_i = x[i::self.num_patches]  # every i-th image
+                out = self.vits[i](pixel_values=patch_i)
+                cls_tokens.append(out.last_hidden_state[:, 0, :])
+            cls_tokens = torch.cat(cls_tokens, dim=0)
+
+        cls_tokens = cls_tokens.view(B, N, -1)
+        pooled = cls_tokens.mean(dim=1)  # average all patch embeddings
+        return self.fc(pooled)  # shape: [batch, 256]
