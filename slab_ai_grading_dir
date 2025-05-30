@@ -1,0 +1,12 @@
+slab_ai_grading/
+├── config/
+│   └── dual_scale.yaml
+├── models/
+│   ├── global_vit.py
+│   ├── local_vit.py
+│   └── fusion_head.py
+├── dataset/
+│   └── card_dataset.py
+├── train.py
+├── infer.py
+└── utils/
