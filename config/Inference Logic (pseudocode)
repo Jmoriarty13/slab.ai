@@ -1,0 +1,15 @@
+# Step 1: Detect and crop card
+card_crop = detect_and_crop(image)
+
+# Step 2: Global ViT pass
+global_feats, entropy = global_model(card_crop)
+
+# Step 3: If needed, run local patch ViT
+if entropy > threshold or use_local:
+    patches = extract_local_patches(card_crop)
+    local_feats = local_model(patches)
+else:
+    local_feats = None
+
+# Step 4: Fuse features and predict
+grade = fusion_head(global_feats, local_feats)
