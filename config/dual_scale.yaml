@@ -1,0 +1,57 @@
+# ===== Global Path Configuration =====
+global_model:
+  type: "vit"
+  name: "google/vit-base-patch16-384"
+  input_size: [384, 384]
+  pretrained: true
+  freeze_encoder: false
+
+# ===== Local Path Configuration =====
+local_model:
+  type: "vit-lite"
+  name: "vit-small-patch8-128"
+  patch_size: 8
+  input_size: [128, 128]
+  pretrained: false
+  num_local_patches: 26
+  shared_weights: true
+
+# ===== Fusion & Head =====
+fusion_head:
+  type: "mlp"
+  hidden_dim: 512
+  output_dim: 5   # centering, corners, edges, surface, overall
+
+# ===== Data =====
+dataset:
+  name: "GradedCardSet"
+  image_dir: "data/images/"
+  annotations: "data/labels.csv"
+  crops_dir: "data/patches/"
+  batch_size: 16
+  num_workers: 4
+  augmentations:
+    global: true
+    local: true
+
+# ===== Training =====
+optimizer:
+  type: "adamw"
+  lr: 2e-5
+  weight_decay: 0.01
+
+scheduler:
+  type: "cosine"
+  warmup_steps: 1000
+
+training:
+  epochs: 20
+  device: "cuda"
+  save_path: "checkpoints/dual_scale.pt"
+  log_dir: "logs/"
+
+# ===== Inference =====
+inference:
+  threshold_entropy: 0.8
+  use_local_path_if_uncertain: true
+  saliency_maps: true
