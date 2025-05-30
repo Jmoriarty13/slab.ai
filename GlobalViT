@@ -1,0 +1,13 @@
+import torch.nn as nn
+from transformers import ViTModel
+
+class GlobalViT(nn.Module):
+    def __init__(self, model_name="google/vit-base-patch16-384"):
+        super(GlobalViT, self).__init__()
+        self.vit = ViTModel.from_pretrained(model_name)
+        self.fc = nn.Linear(self.vit.config.hidden_size, 256)
+
+    def forward(self, x):
+        outputs = self.vit(pixel_values=x)
+        cls_token = outputs.last_hidden_state[:, 0, :]
+        return self.fc(cls_token)  # shape: [batch, 256]
